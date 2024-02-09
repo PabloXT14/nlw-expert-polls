@@ -1,0 +1,21 @@
+# Dependências
+node_modules/
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários
+*.tmp
+
+# Arquivos gerados pelo sistema
+.DS_Store
+
+# Variáveis de ambiente
+*.env
+
+# Build
+dist
+build
+
+# Banco de dados
+*.db
