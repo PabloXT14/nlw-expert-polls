@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/http/server.ts"
+    "dev": "tsx watch src/http/server.ts",
+    "lint:check": "eslint . --ext ts,js",
+    "lint:fix": "eslint . --ext ts,js --fix"
   },
   "keywords": [],
   "author": "pabloxt14",
   "license": "MIT",
   "devDependencies": {
+    "@rocketseat/eslint-config": "^2.2.2",
     "@types/node": "^20.11.17",
+    "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
