@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify'
 import z from 'zod'
 import { prisma } from '../../lib/prisma'
 import { redis } from '../../lib/redis'
+import { voting } from '../../utils/voting-pub-sub'
 
 export async function voteOnPoll(app: FastifyInstance) {
   app.post('/polls/:pollId/votes', async (request, reply) => {
@@ -41,7 +42,17 @@ export async function voteOnPoll(app: FastifyInstance) {
         })
 
         // Apagando o voto anterior e criando um novo (na mesma esquete) no Redis
-        await redis.zincrby(pollId, -1, userPreviewsVoteOnPoll.pollOptionId)
+        const votes = await redis.zincrby(
+          pollId,
+          -1,
+          userPreviewsVoteOnPoll.pollOptionId,
+        )
+
+        // Dando aviso ao websocket de novo voto
+        voting.publish(pollId, {
+          pollOptionId: userPreviewsVoteOnPoll.pollOptionId,
+          votes: Number(votes),
+        })
       } else if (userPreviewsVoteOnPoll) {
         return reply
           .status(400)
@@ -69,7 +80,9 @@ export async function voteOnPoll(app: FastifyInstance) {
     })
 
     // Incrementando em 1 a quantidade de votos de uma opção específica dentro de uma enquete específica no Redis
-    await redis.zincrby(pollId, 1, pollOptionId)
+    const votes = await redis.zincrby(pollId, 1, pollOptionId)
+
+    voting.publish(pollId, { pollOptionId, votes: Number(votes) })
 
     return reply.status(201).send({ message: 'Votado com sucesso!' })
   })

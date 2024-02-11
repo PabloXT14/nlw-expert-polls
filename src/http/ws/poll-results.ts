@@ -1,4 +1,6 @@
 import { FastifyInstance } from 'fastify'
+import z from 'zod'
+import { voting } from '../../utils/voting-pub-sub'
 
 export async function pollResults(app: FastifyInstance) {
   // Aplicando pattern Pub/Sub (Publisher/Subscriber)
@@ -7,14 +9,16 @@ export async function pollResults(app: FastifyInstance) {
     {
       websocket: true,
     },
-    (connection) => {
+    (connection, request) => {
       // Inscrever apenas nas mensagens publicadas no canal com o ID da enquete (`pollId`)
-      connection.socket.on('message', (message: string) => {
-        connection.socket.send('you sent: ' + message)
+      const pollResultsParams = z.object({
+        pollId: z.string().uuid(),
+      })
 
-        setInterval(() => {
-          connection.socket.send('Hi')
-        }, 1000)
+      const { pollId } = pollResultsParams.parse(request.params)
+
+      voting.subscribe(pollId, (message) => {
+        connection.socket.send(JSON.stringify(message))
       })
     },
   )
